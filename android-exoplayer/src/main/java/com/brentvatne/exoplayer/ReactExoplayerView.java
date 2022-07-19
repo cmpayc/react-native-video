@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.accessibility.CaptioningManager;
@@ -39,6 +40,8 @@ import com.google.android.exoplayer2.drm.DrmSessionEventListener;
 import com.google.android.exoplayer2.drm.DrmSessionManager;
 import com.google.android.exoplayer2.drm.FrameworkMediaDrm;
 import com.google.android.exoplayer2.drm.HttpMediaDrmCallback;
+import com.google.android.exoplayer2.drm.LocalMediaDrmCallback;
+import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
@@ -76,6 +79,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 
 @SuppressLint("ViewConstructor")
@@ -157,6 +161,7 @@ class ReactExoplayerView extends FrameLayout implements
     private UUID drmUUID = null;
     private String drmLicenseUrl = null;
     private String[] drmLicenseHeader = null;
+    private String[] drmLocalClearKeys = null;
     private boolean controls;
     // \ End props
 
@@ -428,6 +433,17 @@ class ReactExoplayerView extends FrameLayout implements
         view.layout(view.getLeft(), view.getTop(), view.getMeasuredWidth(), view.getMeasuredHeight());
     }
 
+    public byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len/2];
+
+        for(int i = 0; i < len; i+=2){
+            data[i/2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i+1), 16));
+        }
+
+        return data;
+    }
+
     private void initializePlayer() {
         themedReactContext.addLifecycleEventListener(this);
         ReactExoplayerView self = this;
@@ -483,6 +499,26 @@ class ReactExoplayerView extends FrameLayout implements
                             eventEmitter.error(getResources().getString(errorStringId), e);
                             return;
                         }
+                    } else if (self.drmLocalClearKeys != null) {
+                        ArrayList<String> drmLocalClearKeysList = new ArrayList<>();
+                        for (String drmLocalClearKey: self.drmLocalClearKeys) {           
+                            String[] localClearKeyInfo = drmLocalClearKey.split(":", 2);
+                            String localClearKeyId = localClearKeyInfo[0];
+                            byte[] decodedKeyHex = hexStringToByteArray(localClearKeyId);
+                            String encodedKeyBase64 = Base64.encodeToString(decodedKeyHex, Base64.NO_PADDING);
+                            String localClearKeyValue = localClearKeyInfo[1];
+                            byte[] decodedValueHex = hexStringToByteArray(localClearKeyValue);
+                            String encodedValueBase64 = Base64.encodeToString(decodedValueHex, Base64.NO_PADDING);
+                            drmLocalClearKeysList.add(String.format("{\"kty\":\"oct\",\"k\":\"%s\",\"kid\":\"%s\"}", encodedValueBase64.trim(), encodedKeyBase64.trim()));
+                        }
+                        String clearKeyString = String.format("{\"keys\":[%s],'type':\"temporary\"}", String.join(", ", drmLocalClearKeysList.toArray(new String[0])));
+                        MediaDrmCallback drmCallback = new LocalMediaDrmCallback(clearKeyString.getBytes());
+                        drmSessionManager = new DefaultDrmSessionManager.Builder()
+                            .setPlayClearSamplesWithoutKeys(true)
+                            .setMultiSession(false)
+                            .setKeyRequestParameters(new HashMap<String,String>())
+                            .setUuidAndExoMediaDrmProvider(C.CLEARKEY_UUID, FrameworkMediaDrm.DEFAULT_PROVIDER)
+                            .build(drmCallback);
                     }
                     // End DRM
 
@@ -1380,6 +1416,10 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setDrmLicenseHeader(String[] header){
         this.drmLicenseHeader = header;
+    }
+
+    public void setDrmLocalClearKeys(String[] localKeys) {
+        this.drmLocalClearKeys = localKeys;
     }
 
 

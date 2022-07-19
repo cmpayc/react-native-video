@@ -405,6 +405,7 @@ Video.propTypes = {
     type: PropTypes.oneOf([
       DRMType.CLEARKEY, DRMType.FAIRPLAY, DRMType.WIDEVINE, DRMType.PLAYREADY
     ]),
+    localClearKeys: PropTypes.arrayOf(PropTypes.string),
     licenseServer: PropTypes.string,
     headers: PropTypes.shape({}),
     base64Certificate: PropTypes.bool,
