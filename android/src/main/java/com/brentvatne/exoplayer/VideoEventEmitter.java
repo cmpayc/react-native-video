@@ -39,6 +39,7 @@ class VideoEventEmitter {
     private static final String EVENT_FULLSCREEN_DID_PRESENT = "onVideoFullscreenPlayerDidPresent";
     private static final String EVENT_FULLSCREEN_WILL_DISMISS = "onVideoFullscreenPlayerWillDismiss";
     private static final String EVENT_FULLSCREEN_DID_DISMISS = "onVideoFullscreenPlayerDidDismiss";
+    private static final String EVENT_PICTURE_IN_PICTURE_STATUS_CHANGED = "onPictureInPictureStatusChanged";
 
     private static final String EVENT_STALLED = "onPlaybackStalled";
     private static final String EVENT_RESUME = "onPlaybackResume";
@@ -62,6 +63,7 @@ class VideoEventEmitter {
             EVENT_FULLSCREEN_DID_PRESENT,
             EVENT_FULLSCREEN_WILL_DISMISS,
             EVENT_FULLSCREEN_DID_DISMISS,
+            EVENT_PICTURE_IN_PICTURE_STATUS_CHANGED,
             EVENT_STALLED,
             EVENT_RESUME,
             EVENT_READY,
@@ -87,6 +89,7 @@ class VideoEventEmitter {
             EVENT_FULLSCREEN_DID_PRESENT,
             EVENT_FULLSCREEN_WILL_DISMISS,
             EVENT_FULLSCREEN_DID_DISMISS,
+            EVENT_PICTURE_IN_PICTURE_STATUS_CHANGED,
             EVENT_STALLED,
             EVENT_RESUME,
             EVENT_READY,
@@ -128,6 +131,7 @@ class VideoEventEmitter {
     private static final String EVENT_PROP_HAS_AUDIO_FOCUS = "hasAudioFocus";
     private static final String EVENT_PROP_IS_BUFFERING = "isBuffering";
     private static final String EVENT_PROP_PLAYBACK_RATE = "playbackRate";
+    private static final String EVENT_PROP_IS_ACTIVE = "isActive";
 
     private static final String EVENT_PROP_ERROR = "error";
     private static final String EVENT_PROP_ERROR_STRING = "errorString";
@@ -244,6 +248,12 @@ class VideoEventEmitter {
 
     void fullscreenDidDismiss() {
         receiveEvent(EVENT_FULLSCREEN_DID_DISMISS, null);
+    }
+
+    void pictureInPictureStatusChanged(boolean isActive) {
+        WritableMap map = Arguments.createMap();
+        map.putBoolean(EVENT_PROP_IS_ACTIVE, isActive);
+        receiveEvent(EVENT_PICTURE_IN_PICTURE_STATUS_CHANGED, map);
     }
 
     void error(String errorString, Exception exception) {

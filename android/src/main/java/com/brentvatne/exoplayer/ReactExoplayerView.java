@@ -155,9 +155,11 @@ class ReactExoplayerView extends FrameLayout implements
     private long resumePosition;
     private boolean loadVideoStarted;
     private boolean isFullscreen;
+    private boolean isPip;
     private String fullScreenOrientation;
     private boolean isInBackground;
     private boolean isInFullscreen;
+    private boolean isInPip;
     private boolean isPaused;
     private boolean isBuffering;
     private boolean muted = false;
@@ -306,6 +308,16 @@ class ReactExoplayerView extends FrameLayout implements
 
     @Override
     public void onHostResume() {
+        if (isInPip) {
+            setPip(false);
+            if (player != null) {
+                exoPlayerView.setPlayer(player);
+                syncPlayerState();
+                isInFullscreen = false;
+                isInPip = false;
+            }
+            return;
+        }
         if (!playInBackground || !isInBackground) {
             if (isInFullscreen) {
                 if (player != null) {
@@ -313,6 +325,7 @@ class ReactExoplayerView extends FrameLayout implements
                     syncPlayerState();
                 }
                 isInFullscreen = false;
+                isInPip = false;
             } else {
                 setPlayWhenReady(!isPaused);
             }
@@ -322,6 +335,9 @@ class ReactExoplayerView extends FrameLayout implements
 
     @Override
     public void onHostPause() {
+        if (isPip) {
+            return;
+        }
         isInBackground = true;
         if (playInBackground) {
             return;
@@ -394,12 +410,25 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private void showFullscreen() {
+        showFullscreen(false);
+    }
+
+    private void showFullscreen(boolean withPip) {
         instances.put(this.getId(), this);
         Intent intent = new Intent(getContext(), ExoPlayerFullscreenVideoActivity.class);
         intent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, this.getId());
         intent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_ORIENTATION, this.fullScreenOrientation);
+        intent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_PIP, withPip ? "yes" : "no");
         getContext().startActivity(intent);
         isInFullscreen = true;
+    }
+
+    private void enterPictureInPicture() {
+        if (!isInFullscreen) {
+            showFullscreen(true);
+        } else if (fullScreenDelegate != null) {
+            fullScreenDelegate.enterPictureInPicture();
+        }
     }
 
     /**
@@ -1789,6 +1818,44 @@ class ReactExoplayerView extends FrameLayout implements
         }
     }
 
+    public boolean getIsPip() {
+        return isPip;
+    }
+
+    public void setIsInPip(boolean inPip) {
+        isInPip = inPip;
+    }
+
+    public void setPip(boolean pip) {
+        if (isPip == pip) {
+            return;
+        }
+        if (isFullscreen && !isPip && pip) {
+            enterPictureInPicture();
+            return;
+        }
+        isFullscreen = pip;
+        isPip = pip;
+
+        if (pip) {
+            eventEmitter.fullscreenWillPresent();
+            enterPictureInPicture();
+            eventEmitter.fullscreenDidPresent();
+            eventEmitter.pictureInPictureStatusChanged(true);
+        } else {
+            eventEmitter.fullscreenWillDismiss();
+            if (fullScreenDelegate != null) {
+                fullScreenDelegate.closeFullScreen();
+            }
+            eventEmitter.fullscreenDidDismiss();
+            eventEmitter.pictureInPictureStatusChanged(false);
+        }
+    }
+
+    public ThemedReactContext getThemedContext() {
+        return this.themedReactContext;
+    }
+
     public void setFullscreenOrientation(String orientation) {
         this.fullScreenOrientation = orientation;
     }
@@ -1872,5 +1939,6 @@ class ReactExoplayerView extends FrameLayout implements
 
     public interface FullScreenDelegate {
         void closeFullScreen();
+        void enterPictureInPicture();
     }
 }

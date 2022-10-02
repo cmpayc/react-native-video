@@ -72,6 +72,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_DISABLE_DISCONNECT_ERROR = "disableDisconnectError";
     private static final String PROP_FULLSCREEN = "fullscreen";
     private static final String PROP_FULLSCREEN_ORIENTATION = "fullscreenOrientation";
+    private static final String PROP_PICTURE_IN_PICTURE = "pictureInPicture";
     private static final String PROP_USE_TEXTURE_VIEW = "useTextureView";
     private static final String PROP_SECURE_VIEW = "useSecureView";
     private static final String PROP_SELECTED_VIDEO_TRACK = "selectedVideoTrack";
@@ -331,6 +332,11 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_FULLSCREEN_ORIENTATION)
     public void setFullscreenOrientation(final ReactExoplayerView videoView, final String fullscreenOrientation) {
         videoView.setFullscreenOrientation(fullscreenOrientation);
+    }
+
+    @ReactProp(name = PROP_PICTURE_IN_PICTURE, defaultBoolean = false)
+    public void setPictureInPicture(final ReactExoplayerView videoView, final boolean pip) {
+        videoView.setPip(pip);
     }
 
     @ReactProp(name = PROP_USE_TEXTURE_VIEW, defaultBoolean = true)

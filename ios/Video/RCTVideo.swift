@@ -67,9 +67,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     private let _videoCache:RCTVideoCachingHandler = RCTVideoCachingHandler()
 #endif
     
-#if TARGET_OS_IOS
-    private let _pip:RCTPictureInPicture = RCTPictureInPicture(self.onPictureInPictureStatusChanged, self.onRestoreUserInterfaceForPictureInPictureStop)
-#endif
+    private var _pip:RCTPictureInPicture = RCTPictureInPicture()
     
     // Events
     @objc var onVideoLoadStart: RCTDirectEventBlock?
@@ -353,16 +351,12 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     
     @objc
     func setPictureInPicture(_ pictureInPicture:Bool) {
-#if TARGET_OS_IOS
         _pip.setPictureInPicture(pictureInPicture)
-#endif
     }
     
     @objc
     func setRestoreUserInterfaceForPIPStopCompletionHandler(_ restore:Bool) {
-#if TARGET_OS_IOS
         _pip.setRestoreUserInterfaceForPIPStopCompletionHandler(restore)
-#endif
     }
     
     @objc
@@ -666,9 +660,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
                 self.layer.addSublayer(_playerLayer)
             }
             self.layer.needsDisplayOnBoundsChange = true
-#if TARGET_OS_IOS
-            _pip.setupPipController(_playerLayer)
-#endif
+            _pip.setupPipController(_playerLayer, self.onPictureInPictureStatusChanged, self.onRestoreUserInterfaceForPictureInPictureStop)
         }
     }
     
