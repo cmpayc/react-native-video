@@ -38,6 +38,7 @@ export type ReactVideoSource = Readonly<{
 
 export type ReactVideoDrm = Readonly<{
   type?: 'widevine' | 'playready' | 'clearkey' | 'fairplay';
+  localClearKeys?: string[];
   licenseServer?: string;
   headers?: Headers;
   contentId?: string; // ios

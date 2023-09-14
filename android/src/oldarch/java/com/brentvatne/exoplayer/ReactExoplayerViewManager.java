@@ -40,6 +40,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_DRM_TYPE = "drmType";
     private static final String PROP_DRM_LICENSESERVER = "licenseServer";
     private static final String PROP_DRM_HEADERS = "headers";
+    private static final String PROP_DRM_LOCAL_CLEARKEYS = "localClearKeys";
     private static final String PROP_SRC_HEADERS = "requestHeaders";
     private static final String PROP_RESIZE_MODE = "resizeMode";
     private static final String PROP_REPEAT = "repeat";
@@ -142,6 +143,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         if (drm != null && drm.hasKey(PROP_DRM_TYPE)) {
             String drmType = drm.hasKey(PROP_DRM_TYPE) ? drm.getString(PROP_DRM_TYPE) : null;
             String drmLicenseServer = drm.hasKey(PROP_DRM_LICENSESERVER) ? drm.getString(PROP_DRM_LICENSESERVER) : null;
+            ReadableArray drmLocalClearKeys = drm.hasKey(PROP_DRM_LOCAL_CLEARKEYS) ? drm.getArray(PROP_DRM_LOCAL_CLEARKEYS) : null;
             ReadableArray drmHeadersArray = (drm.hasKey(PROP_DRM_HEADERS)) ? drm.getArray(PROP_DRM_HEADERS) : null;
 
             if (drmType != null && drmLicenseServer != null && Util.getDrmUuid(drmType) != null) {
@@ -159,6 +161,14 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
                     }
                     videoView.setDrmLicenseHeader(drmKeyRequestPropertiesList.toArray(new String[0]));
                 }
+                videoView.setUseTextureView(false);
+            } else if (drmType.equals("clearkey") && drmLocalClearKeys != null) {
+                ArrayList<String> drmLocalClearKeysList = new ArrayList<>();
+                for (int i = 0; i < drmLocalClearKeys.size(); i++) {
+                    String clearKey = drmLocalClearKeys.getString(i);
+                    drmLocalClearKeysList.add(clearKey);
+                }
+                videoView.setDrmLocalClearKeys(drmLocalClearKeysList.toArray(new String[0]));
                 videoView.setUseTextureView(false);
             }
         }

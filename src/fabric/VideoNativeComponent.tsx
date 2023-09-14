@@ -44,6 +44,7 @@ export type DrmType = WithDefault<'widevine' | 'playready' | 'clearkey' | 'fairp
 
 type Drm = Readonly<{
   drmType?: DrmType;
+  localClearKeys?: string[];
   licenseServer?: string;
   headers?: Headers;
   contentId?: string; // ios

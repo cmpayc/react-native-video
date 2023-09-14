@@ -38,6 +38,7 @@ internal class ReactExoplayerViewManager() : ViewGroupManager<ReactExoplayerView
     private val PROP_DRM_TYPE = "drmType"
     private val PROP_DRM_LICENSESERVER = "licenseServer"
     private val PROP_DRM_HEADERS = "headers"
+    private val PROP_DRM_LOCAL_CLEARKEYS = "localClearKeys"
 
     private val PROP_SELECTED_TEXT_TRACK_TYPE = "selectedTextType"
     private val PROP_SELECTED_TEXT_TRACK_VALUE = "value"
@@ -166,6 +167,7 @@ internal class ReactExoplayerViewManager() : ViewGroupManager<ReactExoplayerView
         if (drm != null && drm.hasKey(PROP_DRM_TYPE)) {
             val drmType = if (drm.hasKey(PROP_DRM_TYPE)) drm.getString(PROP_DRM_TYPE) else null
             val drmLicenseServer = if (drm.hasKey(PROP_DRM_LICENSESERVER)) drm.getString(PROP_DRM_LICENSESERVER) else null
+            val drmLocalClearKeys = if (drm.hasKey(PROP_DRM_LOCAL_CLEARKEYS)) drm.getArray(PROP_DRM_LOCAL_CLEARKEYS) else null
             val drmHeadersArray = if (drm.hasKey(PROP_DRM_HEADERS)) drm.getArray(PROP_DRM_HEADERS) else null
             if (drmType != null && drmLicenseServer != null && Util.getDrmUuid(drmType) != null) {
                 val drmUUID = Util.getDrmUuid(drmType)
@@ -183,6 +185,14 @@ internal class ReactExoplayerViewManager() : ViewGroupManager<ReactExoplayerView
                     view?.setDrmLicenseHeader(drmKeyRequestPropertiesList.toArray(arrayOfNulls<String>(0)))
                 }
                 view?.setUseTextureView(false)
+            } else if (drmType.equals("clearkey") && drmLocalClearKeys != null) {
+                val drmLocalClearKeysList: ArrayList<String?> = ArrayList()
+                for (i in 0 until drmLocalClearKeys.size()) {
+                    String clearKey = drmLocalClearKeys.getString(i);
+                    drmLocalClearKeysList.add(clearKey);
+                }
+                view?.setDrmLocalClearKeys(drmLocalClearKeysList.toArray(arrayOfNulls<String>(0)))
+                view?.setUseTextureView(false);
             }
         }
     }
