@@ -188,7 +188,7 @@ internal class ReactExoplayerViewManager() : ViewGroupManager<ReactExoplayerView
             } else if (drmType.equals("clearkey") && drmLocalClearKeys != null) {
                 val drmLocalClearKeysList: ArrayList<String?> = ArrayList()
                 for (i in 0 until drmLocalClearKeys.size()) {
-                    String clearKey = drmLocalClearKeys.getString(i);
+                    val clearKey = drmLocalClearKeys.getString(i);
                     drmLocalClearKeysList.add(clearKey);
                 }
                 view?.setDrmLocalClearKeys(drmLocalClearKeysList.toArray(arrayOfNulls<String>(0)))
