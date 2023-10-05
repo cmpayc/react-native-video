@@ -131,7 +131,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     public void receiveCommand(@NonNull ReactExoplayerView root, String commandId, @androidx.annotation.Nullable ReadableArray args) {
         switch (commandId) {
             case "seek":
-                this.setSeek(root, args.getInt(0));
+                this.setSeek(root, (float) args.getDouble(0));
                 break;
             default:
                 break;
