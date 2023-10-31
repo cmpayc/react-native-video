@@ -19,7 +19,7 @@ public class PipBroadcastReceiver extends BroadcastReceiver {
             return;
         }
         if (intent.getAction().equals(ACTION_PLAY)) {
-            int exoplayerViewId = intent.getIntExtra(ExoPlayerFullscreenVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, -1);
+            int exoplayerViewId = intent.getIntExtra(ExoPlayerPipVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, -1);
             ReactExoplayerView exoplayerView = ReactExoplayerView.getViewInstance(exoplayerViewId);
             if (exoplayerView == null) {
                 return;
@@ -30,15 +30,17 @@ public class PipBroadcastReceiver extends BroadcastReceiver {
             }
             if (exoplayerView != null) {
                 exoplayerView.setPausedModifier(false);
+                exoplayerView.setIsPipPaused(false);
             }
         } else if (intent.getAction().equals(ACTION_PAUSE)) {
-            int exoplayerViewId = intent.getIntExtra(ExoPlayerFullscreenVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, -1);
+            int exoplayerViewId = intent.getIntExtra(ExoPlayerPipVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, -1);
             ReactExoplayerView exoplayerView = ReactExoplayerView.getViewInstance(exoplayerViewId);
             if (exoplayerView == null) {
                 return;
             }
             if (exoplayerView != null) {
                 exoplayerView.setPausedModifier(true);
+                exoplayerView.setIsPipPaused(true);
             }
         }
     }

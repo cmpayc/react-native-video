@@ -135,7 +135,9 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private static Map<Integer, ReactExoplayerView> instances = new HashMap<>();
+
     private FullScreenDelegate fullScreenDelegate;
+    private PipDelegate pipDelegate;
 
     private final VideoEventEmitter eventEmitter;
     private final ReactExoplayerConfig config;
@@ -161,6 +163,7 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean isInFullscreen;
     private boolean isInPip;
     private boolean isPaused;
+    private boolean isPipPaused;
     private boolean isBuffering;
     private boolean muted = false;
     private boolean hasAudioFocus = false;
@@ -309,6 +312,7 @@ class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onHostResume() {
         if (isInPip) {
+            isPaused = isPipPaused;
             setPip(false);
             if (player != null) {
                 exoPlayerView.setPlayer(player);
@@ -394,6 +398,10 @@ class ReactExoplayerView extends FrameLayout implements
         this.fullScreenDelegate = delegate;
     }
 
+    public void registerPipDelegate(PipDelegate delegate) {
+        this.pipDelegate = delegate;
+    }
+
     // Internal methods
 
     /**
@@ -410,24 +418,26 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private void showFullscreen() {
-        showFullscreen(false);
-    }
-
-    private void showFullscreen(boolean withPip) {
         instances.put(this.getId(), this);
         Intent intent = new Intent(getContext(), ExoPlayerFullscreenVideoActivity.class);
         intent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, this.getId());
         intent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_ORIENTATION, this.fullScreenOrientation);
-        intent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_PIP, withPip ? "yes" : "no");
         getContext().startActivity(intent);
         isInFullscreen = true;
     }
 
+    private void showPictureInPicture() {
+        instances.put(this.getId(), this);
+        Intent intent = new Intent(getContext(), ExoPlayerPipVideoActivity.class);
+        intent.putExtra(ExoPlayerPipVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, this.getId());
+        getContext().startActivity(intent);
+    }
+
     private void enterPictureInPicture() {
-        if (!isInFullscreen) {
-            showFullscreen(true);
-        } else if (fullScreenDelegate != null) {
-            fullScreenDelegate.enterPictureInPicture();
+        if (pipDelegate != null) {
+            pipDelegate.enterPictureInPicture();
+        } else {
+            showPictureInPicture();
         }
     }
 
@@ -627,7 +637,6 @@ class ReactExoplayerView extends FrameLayout implements
                 }
             }
         }, 1);
-        
     }
 
     private void initializePlayerCore(ReactExoplayerView self) {
@@ -1155,7 +1164,7 @@ class ReactExoplayerView extends FrameLayout implements
         WritableArray videoTracks = Arguments.createArray();
 
         MappingTrackSelector.MappedTrackInfo info = trackSelector.getCurrentMappedTrackInfo();
-        
+
         if (info == null || trackRendererIndex == C.INDEX_UNSET) {
             return videoTracks;
         }
@@ -1614,7 +1623,7 @@ class ReactExoplayerView extends FrameLayout implements
             for (int j = 0; j < group.length; j++) {
                 allTracks.add(j);
             }
-            
+
             // Valiate list of all tracks and add only supported formats
             int supportedFormatLength = 0;
             ArrayList<Integer> supportedTrackList = new ArrayList<Integer>();
@@ -1779,7 +1788,7 @@ class ReactExoplayerView extends FrameLayout implements
         long freeMemory = runtime.maxMemory() - usedMemory;
         long reserveMemory = (long)minBackBufferMemoryReservePercent * runtime.maxMemory();
         if (reserveMemory > freeMemory) {
-            // We don't have enough memory in reserve so we will 
+            // We don't have enough memory in reserve so we will
             Log.w("ExoPlayer Warning", "Not enough reserve memory, setting back buffer to 0ms to reduce memory pressure!");
             this.backBufferDurationMs = 0;
             return;
@@ -1826,28 +1835,20 @@ class ReactExoplayerView extends FrameLayout implements
         isInPip = inPip;
     }
 
+    public void setIsPipPaused(boolean paused) {
+        isPipPaused = paused;
+    }
+
     public void setPip(boolean pip) {
         if (isPip == pip) {
             return;
         }
-        if (isFullscreen && !isPip && pip) {
-            enterPictureInPicture();
-            return;
-        }
-        isFullscreen = pip;
         isPip = pip;
 
         if (pip) {
-            eventEmitter.fullscreenWillPresent();
             enterPictureInPicture();
-            eventEmitter.fullscreenDidPresent();
             eventEmitter.pictureInPictureStatusChanged(true);
         } else {
-            eventEmitter.fullscreenWillDismiss();
-            if (fullScreenDelegate != null) {
-                fullScreenDelegate.closeFullScreen();
-            }
-            eventEmitter.fullscreenDidDismiss();
             eventEmitter.pictureInPictureStatusChanged(false);
         }
     }
@@ -1939,6 +1940,9 @@ class ReactExoplayerView extends FrameLayout implements
 
     public interface FullScreenDelegate {
         void closeFullScreen();
+    }
+
+    public interface PipDelegate {
         void enterPictureInPicture();
     }
 }

@@ -2,7 +2,7 @@ package com.brentvatne.exoplayer;
 
 import android.app.Activity;
 import android.app.PendingIntent;
-import android.app.PictureInPictureParams;
+
 import android.app.RemoteAction;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -28,7 +28,6 @@ import java.util.ArrayList;
 public class ExoPlayerFullscreenVideoActivity extends AppCompatActivity implements ReactExoplayerView.FullScreenDelegate {
     public static final String EXTRA_EXO_PLAYER_VIEW_ID = "extra_id";
     public static final String EXTRA_ORIENTATION = "extra_orientation";
-    public static final String EXTRA_PIP = "extra_pip";
 
     private ReactExoplayerView exoplayerView;
     private PlayerControlView playerControlView;
@@ -43,10 +42,9 @@ public class ExoPlayerFullscreenVideoActivity extends AppCompatActivity implemen
             finish();
             return;
         }
-        super.onCreate(savedInstanceState);
+        super.onCreate(null);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         String orientation = getIntent().getStringExtra(EXTRA_ORIENTATION);
-        String withPip = getIntent().getStringExtra(EXTRA_PIP);
         if ("landscape".equals(orientation)) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         } else if ("portrait".equals(orientation)) {
@@ -86,11 +84,6 @@ public class ExoPlayerFullscreenVideoActivity extends AppCompatActivity implemen
                 exoplayerView.setPausedModifier(true);
             }
         });
-
-        if ("yes".equals(withPip) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            playerControlView.hide();
-            enterPictureInPicture();
-        }
     }
 
     @Override
@@ -105,9 +98,6 @@ public class ExoPlayerFullscreenVideoActivity extends AppCompatActivity implemen
     @Override
     public void onPause() {
         super.onPause();
-        if (exoplayerView.getIsPip()) {
-            return;
-        }
         player.setPlayWhenReady(false);
         if (exoplayerView != null) {
             exoplayerView.registerFullScreenDelegate(null);
@@ -123,31 +113,10 @@ public class ExoPlayerFullscreenVideoActivity extends AppCompatActivity implemen
     }
 
     @Override
-    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
-        if (!isInPictureInPictureMode) {
-            if (exoplayerView != null) {
-                Intent intent = new Intent(exoplayerView.getThemedContext(), exoplayerView.getThemedContext().getCurrentActivity().getClass());
-                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                exoplayerView.getThemedContext().startActivity(intent);
-            }
-        } else {
-            if (exoplayerView != null) {
-                Activity mainActivity = exoplayerView.getThemedContext().getCurrentActivity();
-                mainActivity.moveTaskToBack(true);
-                exoplayerView.setIsInPip(true);
-            }
-        }
-    }
-
-    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
             if (exoplayerView != null) {
-                if (exoplayerView.getIsPip()) {
-                    exoplayerView.setPip(false);
-                } else {
-                    exoplayerView.setFullscreen(false);
-                }
+                exoplayerView.setFullscreen(false);
                 return false;
             }
             return true;
@@ -194,46 +163,5 @@ public class ExoPlayerFullscreenVideoActivity extends AppCompatActivity implemen
     @Override
     public void closeFullScreen() {
         finish();
-    }
-
-    @Override
-    public void enterPictureInPicture() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && exoplayerView != null) {
-            Rational aspectRatio = new Rational(2, 3);
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                ArrayList<RemoteAction> actions = new ArrayList<>();
-                Icon pauseIcon = Icon.createWithResource(exoplayerView.getThemedContext(), R.drawable.exo_controls_pause);
-                Intent pauseIntent = new Intent(exoplayerView.getThemedContext(), PipBroadcastReceiver.class);
-                pauseIntent.setAction(PipBroadcastReceiver.ACTION_PAUSE);
-                pauseIntent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, exoplayerViewId);
-                PendingIntent broadcastPause = PendingIntent.getBroadcast(
-                        exoplayerView.getThemedContext(),
-                        0,
-                        pauseIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-                );
-                RemoteAction pauseAction = new RemoteAction(pauseIcon, "Pause", "", broadcastPause);
-                actions.add(pauseAction);
-                Icon playIcon = Icon.createWithResource(exoplayerView.getThemedContext(), R.drawable.exo_controls_play);
-                Intent playIntent = new Intent(exoplayerView.getThemedContext(), PipBroadcastReceiver.class);
-                playIntent.setAction(PipBroadcastReceiver.ACTION_PLAY);
-                playIntent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, exoplayerViewId);
-                PendingIntent broadcastPlay = PendingIntent.getBroadcast(
-                        exoplayerView.getThemedContext(),
-                        0,
-                        playIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-                );
-                RemoteAction playAction = new RemoteAction(playIcon, "Play", "", broadcastPlay);
-                actions.add(playAction);
-                PictureInPictureParams params = new PictureInPictureParams.Builder()
-                        .setAspectRatio(aspectRatio)
-                        .setActions(actions)
-                        .build();
-                enterPictureInPictureMode(params);
-            } else {
-                enterPictureInPictureMode();
-            }
-        }
     }
 }
