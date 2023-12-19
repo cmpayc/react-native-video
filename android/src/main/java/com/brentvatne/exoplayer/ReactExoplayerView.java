@@ -162,6 +162,7 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean isInBackground;
     private boolean isInFullscreen;
     private boolean isInPip;
+    private boolean isSecured;
     private boolean isPaused;
     private boolean isPipPaused;
     private boolean isBuffering;
@@ -1717,6 +1718,14 @@ class ReactExoplayerView extends FrameLayout implements
         textTrackType = type;
         textTrackValue = value;
         setSelectedTrack(C.TRACK_TYPE_TEXT, textTrackType, textTrackValue);
+    }
+
+    public void setSecuredModifier(boolean secured) {
+        isSecured = secured;
+    }
+
+    public boolean getIsSecured() {
+        return isSecured;
     }
 
     public void setPausedModifier(boolean paused) {

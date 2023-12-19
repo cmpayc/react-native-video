@@ -463,6 +463,7 @@ Video.propTypes = {
       language: PropTypes.string.isRequired,
     })
   ),
+  secured: PropTypes.bool,
   paused: PropTypes.bool,
   muted: PropTypes.bool,
   volume: PropTypes.number,

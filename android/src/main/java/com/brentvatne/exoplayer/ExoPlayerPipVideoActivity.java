@@ -67,6 +67,12 @@ public class ExoPlayerPipVideoActivity extends AppCompatActivity implements Reac
         if (exoplayerView != null) {
             exoplayerView.syncPlayerState();
             exoplayerView.registerPipDelegate(this);
+            Boolean isSecured = exoplayerView.getIsSecured();
+            if (isSecured) {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            } else {
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            }
         }
     }
 

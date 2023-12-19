@@ -46,6 +46,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_SELECTED_TEXT_TRACK_TYPE = "type";
     private static final String PROP_SELECTED_TEXT_TRACK_VALUE = "value";
     private static final String PROP_TEXT_TRACKS = "textTracks";
+    private static final String PROP_SECURED = "secured";
     private static final String PROP_PAUSED = "paused";
     private static final String PROP_MUTED = "muted";
     private static final String PROP_VOLUME = "volume";
@@ -247,6 +248,11 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     public void setPropTextTracks(final ReactExoplayerView videoView,
                                   @Nullable ReadableArray textTracks) {
         videoView.setTextTracks(textTracks);
+    }
+
+    @ReactProp(name = PROP_SECURED, defaultBoolean = false)
+    public void setSecured(final ReactExoplayerView videoView, final boolean secured) {
+        videoView.setSecuredModifier(secured);
     }
 
     @ReactProp(name = PROP_PAUSED, defaultBoolean = false)
