@@ -402,7 +402,7 @@ class ReactExoplayerView extends FrameLayout implements
 
         // Setting the player for the playerControlView
         playerControlView.setPlayer(player);
-        playPauseControlContainer = playerControlView.findViewById(R.id.exo_play_pause_container);
+        playPauseControlContainer = playerControlView.findViewById(com.brentvatne.react.R.id.exo_play_pause_container);
 
         // Invoking onClick event for exoplayerView
         exoPlayerView.setOnClickListener(new OnClickListener() {
@@ -415,7 +415,7 @@ class ReactExoplayerView extends FrameLayout implements
         });
 
         //Handling the playButton click event
-        ImageButton playButton = playerControlView.findViewById(R.id.exo_play);
+        ImageButton playButton = playerControlView.findViewById(com.brentvatne.react.R.id.exo_play);
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -427,7 +427,7 @@ class ReactExoplayerView extends FrameLayout implements
         });
 
         //Handling the pauseButton click event
-        ImageButton pauseButton = playerControlView.findViewById(R.id.exo_pause);
+        ImageButton pauseButton = playerControlView.findViewById(com.brentvatne.react.R.id.exo_pause);
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -436,7 +436,7 @@ class ReactExoplayerView extends FrameLayout implements
         });
 
         //Handling the fullScreenButton click event
-        final ImageButton fullScreenButton = playerControlView.findViewById(R.id.exo_fullscreen);
+        final ImageButton fullScreenButton = playerControlView.findViewById(com.brentvatne.react.R.id.exo_fullscreen);
         fullScreenButton.setOnClickListener(v -> setFullscreen(!isFullscreen));
         updateFullScreenButtonVisbility();
 
@@ -444,8 +444,8 @@ class ReactExoplayerView extends FrameLayout implements
         eventListener = new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int playbackState) {
-                View playButton = playerControlView.findViewById(R.id.exo_play);
-                View pauseButton = playerControlView.findViewById(R.id.exo_pause);
+                View playButton = playerControlView.findViewById(com.brentvatne.react.R.id.exo_play);
+                View pauseButton = playerControlView.findViewById(com.brentvatne.react.R.id.exo_pause);
                 if (playButton != null && playButton.getVisibility() == GONE) {
                     playButton.setVisibility(INVISIBLE);
                 }
@@ -1927,7 +1927,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     private void updateFullScreenButtonVisbility() {
         if (playerControlView != null) {
-            final ImageButton fullScreenButton = playerControlView.findViewById(R.id.exo_fullscreen);
+            final ImageButton fullScreenButton = playerControlView.findViewById(com.brentvatne.react.R.id.exo_fullscreen);
             if (controls) {
                 //Handling the fullScreenButton click event
                 if (isFullscreen && fullScreenPlayerView != null && !fullScreenPlayerView.isShowing()) {

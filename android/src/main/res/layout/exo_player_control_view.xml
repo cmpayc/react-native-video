@@ -24,10 +24,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center">
-            <ImageButton android:id="@id/exo_play"
+            <ImageButton android:id="@+id/exo_play"
                 style="@style/ExoMediaButton.Play"/>
 
-            <ImageButton android:id="@id/exo_pause"
+            <ImageButton android:id="@+id/exo_pause"
                 style="@style/ExoMediaButton.Pause"/>
         </FrameLayout>
 
