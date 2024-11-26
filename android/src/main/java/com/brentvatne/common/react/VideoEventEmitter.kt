@@ -27,6 +27,7 @@ enum class EventTypes(val eventName: String) {
     EVENT_FULLSCREEN_DID_PRESENT("onVideoFullscreenPlayerDidPresent"),
     EVENT_FULLSCREEN_WILL_DISMISS("onVideoFullscreenPlayerWillDismiss"),
     EVENT_FULLSCREEN_DID_DISMISS("onVideoFullscreenPlayerDidDismiss"),
+    EVENT_PICTURE_IN_PICTURE_STATUS_CHANGED("onPictureInPictureStatusChanged"),
 
     EVENT_READY("onReadyForDisplay"),
     EVENT_BUFFER("onVideoBuffer"),
@@ -76,6 +77,7 @@ class VideoEventEmitter {
     lateinit var onVideoFullscreenPlayerDidPresent: () -> Unit
     lateinit var onVideoFullscreenPlayerWillDismiss: () -> Unit
     lateinit var onVideoFullscreenPlayerDidDismiss: () -> Unit
+    lateinit var onPictureInPictureStatusChanged: (isActive: Boolean) -> Unit
     lateinit var onReadyForDisplay: () -> Unit
     lateinit var onVideoBuffer: (isBuffering: Boolean) -> Unit
     lateinit var onControlsVisibilityChange: (isVisible: Boolean) -> Unit
@@ -188,6 +190,11 @@ class VideoEventEmitter {
             }
             onVideoFullscreenPlayerDidDismiss = {
                 event.dispatch(EventTypes.EVENT_FULLSCREEN_DID_DISMISS)
+            }
+            onPictureInPictureStatusChanged = { isActive ->
+                event.dispatch(EventTypes.EVENT_PICTURE_IN_PICTURE_STATUS_CHANGED) {
+                    putBoolean("isActive", isActive)
+                }
             }
             onReadyForDisplay = {
                 event.dispatch(EventTypes.EVENT_READY)

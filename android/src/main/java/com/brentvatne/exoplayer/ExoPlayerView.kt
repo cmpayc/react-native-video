@@ -1,6 +1,7 @@
 package com.brentvatne.exoplayer
 
 import android.content.Context
+import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
@@ -26,9 +27,11 @@ import com.brentvatne.common.api.ViewType
 import com.brentvatne.common.toolbox.DebugLog
 
 @UnstableApi
-class ExoPlayerView(private val context: Context) :
-    FrameLayout(context, null, 0),
-    AdViewProvider {
+class ExoPlayerView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr), AdViewProvider {
 
     private var surfaceView: View? = null
     private var shutterView: View
@@ -236,9 +239,6 @@ class ExoPlayerView(private val context: Context) :
      * @param player The {@link ExoPlayer} to use.
      */
     fun setPlayer(player: ExoPlayer?) {
-        if (this.player == player) {
-            return
-        }
         if (this.player != null) {
             this.player!!.removeListener(componentListener)
             clearVideoView()

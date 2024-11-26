@@ -142,6 +142,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -171,6 +172,11 @@ public class ReactExoplayerView extends FrameLayout implements
         DEFAULT_COOKIE_MANAGER.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
     }
 
+    private static Map<Integer, ReactExoplayerView> instances = new HashMap<>();
+
+    private FullScreenDelegate fullScreenDelegate;
+    private PipDelegate pipDelegate;
+
     protected final VideoEventEmitter eventEmitter;
     private final ReactExoplayerConfig config;
     private final DefaultBandwidthMeter bandwidthMeter;
@@ -198,8 +204,14 @@ public class ReactExoplayerView extends FrameLayout implements
     private long resumePosition;
     private boolean loadVideoStarted;
     private boolean isFullscreen;
+    private boolean isPip;
+    private String fullScreenOrientation;
     private boolean isInBackground;
+    private boolean isInFullscreen;
+    private boolean isInPip;
+    private boolean isSecured;
     private boolean isPaused;
+    private boolean isPipPaused;
     private boolean isBuffering;
     private boolean muted = false;
     private boolean hasAudioFocus = false;
@@ -345,14 +357,37 @@ public class ReactExoplayerView extends FrameLayout implements
     // LifecycleEventListener implementation
     @Override
     public void onHostResume() {
+        if (isInPip) {
+            isPaused = isPipPaused;
+            setPip(false);
+            if (player != null) {
+                exoPlayerView.setPlayer(player);
+                syncPlayerState();
+                isInFullscreen = false;
+                isInPip = false;
+            }
+            return;
+        }
         if (!playInBackground || !isInBackground) {
-            setPlayWhenReady(!isPaused);
+            if (isInFullscreen) {
+                if (player != null) {
+                    exoPlayerView.setPlayer(player);
+                    syncPlayerState();
+                }
+                isInFullscreen = false;
+                isInPip = false;
+            } else {
+                setPlayWhenReady(!isPaused);
+            }
         }
         isInBackground = false;
     }
 
     @Override
     public void onHostPause() {
+        if (isPip) {
+            return;
+        }
         isInBackground = true;
         if (playInBackground) {
             return;
@@ -376,6 +411,7 @@ public class ReactExoplayerView extends FrameLayout implements
         themedReactContext.removeLifecycleEventListener(this);
         releasePlayer();
         viewHasDropped = true;
+        instances.remove(this.getId());
     }
 
     //BandwidthMeter.EventListener implementation
@@ -395,6 +431,33 @@ public class ReactExoplayerView extends FrameLayout implements
         }
     }
 
+    public static ReactExoplayerView getViewInstance(Integer uid) {
+        return instances.get(uid);
+    }
+
+    public ExoPlayer getPlayer() {
+        return player;
+    }
+
+    public void syncPlayerState() {
+        if (player == null) return;
+        if (player.getPlaybackState() == Player.STATE_ENDED) {
+            // Try to get last frame displayed
+            player.seekTo(player.getDuration() - 200);
+            player.setPlayWhenReady(true);
+        } else {
+            player.setPlayWhenReady(!isPaused);
+        }
+    }
+
+    public void registerFullScreenDelegate(FullScreenDelegate delegate) {
+        this.fullScreenDelegate = delegate;
+    }
+
+    public void registerPipDelegate(PipDelegate delegate) {
+        this.pipDelegate = delegate;
+    }
+
     // Internal methods
 
     /**
@@ -407,6 +470,30 @@ public class ReactExoplayerView extends FrameLayout implements
             playerControlView.hide();
         } else {
             playerControlView.show();
+        }
+    }
+
+    private void showFullscreen() {
+        instances.put(this.getId(), this);
+        Intent intent = new Intent(getContext(), ExoPlayerFullscreenVideoActivity.class);
+        intent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, this.getId());
+        intent.putExtra(ExoPlayerFullscreenVideoActivity.EXTRA_ORIENTATION, this.fullScreenOrientation);
+        getContext().startActivity(intent);
+        isInFullscreen = true;
+    }
+
+    private void showPictureInPicture() {
+        instances.put(this.getId(), this);
+        Intent intent = new Intent(getContext(), ExoPlayerPipVideoActivity.class);
+        intent.putExtra(ExoPlayerPipVideoActivity.EXTRA_EXO_PLAYER_VIEW_ID, this.getId());
+        getContext().startActivity(intent);
+    }
+
+    private void enterPictureInPicture() {
+        if (pipDelegate != null) {
+            pipDelegate.enterPictureInPicture();
+        } else {
+            showPictureInPicture();
         }
     }
 
@@ -426,6 +513,7 @@ public class ReactExoplayerView extends FrameLayout implements
 
         // Setting the player for the playerControlView
         playerControlView.setPlayer(player);
+        playerControlView.findViewById(R.id.exo_fullscreen_button).setOnClickListener(v -> setFullscreen(true));
         playPauseControlContainer = playerControlView.findViewById(R.id.exo_play_pause_container);
 
         // Invoking onClick event for exoplayerView
@@ -2207,6 +2295,14 @@ public class ReactExoplayerView extends FrameLayout implements
         setSelectedTrack(C.TRACK_TYPE_TEXT, textTrackType, textTrackValue);
     }
 
+    public void setSecuredModifier(boolean secured) {
+        isSecured = secured;
+    }
+
+    public boolean getIsSecured() {
+        return isSecured;
+    }
+
     public void setPausedModifier(boolean paused) {
         isPaused = paused;
         if (player != null) {
@@ -2339,31 +2435,36 @@ public class ReactExoplayerView extends FrameLayout implements
         }
         isFullscreen = fullscreen;
 
-        Activity activity = themedReactContext.getCurrentActivity();
-        if (activity == null) {
-            return;
-        }
-
         if (isFullscreen) {
+            /*
             fullScreenPlayerView = new FullScreenPlayerView(getContext(), exoPlayerView, this, playerControlView, new OnBackPressedCallback(true) {
                 @Override
                 public void handleOnBackPressed() {
                     setFullscreen(false);
                 }
             }, controlsConfig);
+            */
             eventEmitter.onVideoFullscreenPlayerWillPresent.invoke();
+            showFullscreen();
+            /*
             if (fullScreenPlayerView != null) {
                 fullScreenPlayerView.show();
             }
+            */
             UiThreadUtil.runOnUiThread(() -> {
                 eventEmitter.onVideoFullscreenPlayerDidPresent.invoke();
             });
         } else {
             eventEmitter.onVideoFullscreenPlayerWillDismiss.invoke();
+            /*
             if (fullScreenPlayerView != null) {
                 fullScreenPlayerView.dismiss();
                 reLayoutControls();
                 setControls(controls);
+            }
+            */
+            if (fullScreenDelegate != null) {
+                fullScreenDelegate.closeFullScreen();
             }
             UiThreadUtil.runOnUiThread(() -> {
                 eventEmitter.onVideoFullscreenPlayerDidDismiss.invoke();
@@ -2371,6 +2472,40 @@ public class ReactExoplayerView extends FrameLayout implements
         }
         // need to be done at the end to avoid hiding fullscreen control button when fullScreenPlayerView is shown
         updateFullScreenButtonVisibility();
+    }
+
+    public boolean getIsPip() {
+        return isPip;
+    }
+
+    public void setIsInPip(boolean inPip) {
+        isInPip = inPip;
+    }
+
+    public void setIsPipPaused(boolean paused) {
+        isPipPaused = paused;
+    }
+
+    public void setPip(boolean pip) {
+        if (isPip == pip) {
+            return;
+        }
+        isPip = pip;
+
+        if (pip) {
+            enterPictureInPicture();
+            eventEmitter.onPictureInPictureStatusChanged.invoke(true);
+        } else {
+            eventEmitter.onPictureInPictureStatusChanged.invoke(false);
+        }
+    }
+
+    public ThemedReactContext getThemedContext() {
+        return this.themedReactContext;
+    }
+
+    public void setFullscreenOrientation(String orientation) {
+        this.fullScreenOrientation = orientation;
     }
 
     public void setHideShutterView(boolean hideShutterView) {
@@ -2458,5 +2593,13 @@ public class ReactExoplayerView extends FrameLayout implements
     public void setControlsStyles(ControlsConfig controlsStyles) {
         controlsConfig = controlsStyles;
         refreshControlsStyles();
+    }
+
+    public interface FullScreenDelegate {
+        void closeFullScreen();
+    }
+
+    public interface PipDelegate {
+        void enterPictureInPicture();
     }
 }

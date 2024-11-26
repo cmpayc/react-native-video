@@ -115,6 +115,23 @@
             android:layout_height="@dimen/full_screen_size"
             android:layout_margin="@dimen/full_screen_margin"
             android:scaleType="fitCenter" />
+
+        <FrameLayout
+            android:id="@+id/exo_fullscreen_button"
+            android:layout_width="32dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right">
+
+            <ImageView
+                android:id="@+id/exo_fullscreen_icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/exo_icon_fullscreen_enter" />
+
+        </FrameLayout>
     </LinearLayout>
 
 </LinearLayout>

@@ -31,6 +31,7 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
         private const val PROP_SELECTED_TEXT_TRACK = "selectedTextTrack"
         private const val PROP_SELECTED_TEXT_TRACK_TYPE = "type"
         private const val PROP_SELECTED_TEXT_TRACK_VALUE = "value"
+        private const val PROP_SECURED = "secured"
         private const val PROP_PAUSED = "paused"
         private const val PROP_MUTED = "muted"
         private const val PROP_AUDIO_OUTPUT = "audioOutput"
@@ -47,6 +48,8 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
         private const val PROP_DISABLE_DISCONNECT_ERROR = "disableDisconnectError"
         private const val PROP_FOCUSABLE = "focusable"
         private const val PROP_FULLSCREEN = "fullscreen"
+        private const val PROP_FULLSCREEN_ORIENTATION = "fullscreenOrientation"
+        private const val PROP_PICTURE_IN_PICTURE = "pictureInPicture"
         private const val PROP_VIEW_TYPE = "viewType"
         private const val PROP_SELECTED_VIDEO_TRACK = "selectedVideoTrack"
         private const val PROP_SELECTED_VIDEO_TRACK_TYPE = "type"
@@ -144,6 +147,11 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
         videoView.setSelectedTextTrack(typeString, value)
     }
 
+    @ReactProp(name = PROP_SECURED, defaultBoolean = false)
+    fun setSecured(videoView: ReactExoplayerView, secured: Boolean) {
+        videoView.setSecuredModifier(secured)
+    }
+
     @ReactProp(name = PROP_PAUSED, defaultBoolean = false)
     fun setPaused(videoView: ReactExoplayerView, paused: Boolean) {
         videoView.setPausedModifier(paused)
@@ -213,6 +221,16 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
     @ReactProp(name = PROP_FULLSCREEN, defaultBoolean = false)
     fun setFullscreen(videoView: ReactExoplayerView, fullscreen: Boolean) {
         videoView.setFullscreen(fullscreen)
+    }
+
+    @ReactProp(name = PROP_FULLSCREEN_ORIENTATION)
+    fun setFullscreenOrientation(videoView: ReactExoplayerView, fullscreenOrientation: String) {
+        videoView.setFullscreenOrientation(fullscreenOrientation)
+    }
+
+    @ReactProp(name = PROP_PICTURE_IN_PICTURE, defaultBoolean = false)
+    fun setPictureInPicture(videoView: ReactExoplayerView, pip: Boolean) {
+        videoView.setPip(pip)
     }
 
     @ReactProp(name = PROP_VIEW_TYPE, defaultInt = ViewType.VIEW_TYPE_SURFACE)

@@ -314,6 +314,7 @@ export interface ReactVideoProps extends ReactVideoEvents, ViewProps {
   mixWithOthers?: EnumValues<MixWithOthersType>; // iOS
   muted?: boolean;
   paused?: boolean;
+  secured?: boolean;
   pictureInPicture?: boolean; // iOS
   playInBackground?: boolean;
   playWhenInactive?: boolean; // iOS
