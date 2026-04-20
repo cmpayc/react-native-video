@@ -32,6 +32,16 @@ class DRMProps {
     var drmLicenseHeader: Array<String> = emptyArray<String>()
 
     /**
+     * DRM local Clearkeys
+     */
+    var drmLocalClearKeys: String? = null
+
+    /**
+     * DRM local Clearkeys list
+     */
+    var drmLocalClearKeysList: Array<String> = emptyArray<String>()
+
+    /**
      * Flag to enable key rotation support
      */
     var multiDrm: Boolean = false
@@ -52,6 +62,7 @@ class DRMProps {
         private const val PROP_DRM_HEADERS_KEY = "key"
         private const val PROP_DRM_HEADERS_VALUE = "value"
         private const val PROP_DRM_MULTI_DRM = "multiDrm"
+        private const val PROP_DRM_LOCAL_CLEARKEYS = "localClearKeys"
 
         /** parse the source ReadableMap received from app */
         @JvmStatic
@@ -63,6 +74,7 @@ class DRMProps {
                 drm.drmLicenseServer = safeGetString(src, PROP_DRM_LICENSE_SERVER)
                 drm.multiDrm = safeGetBool(src, PROP_DRM_MULTI_DRM, false)
                 val drmHeadersArray = safeGetArray(src, PROP_DRM_HEADERS)
+                val drmLocalClearKeys = safeGetArray(src, PROP_DRM_LOCAL_CLEARKEYS)
                 if (drm.drmType != null && drm.drmLicenseServer != null) {
                     if (drmHeadersArray != null) {
                         val drmKeyRequestPropertiesList = ArrayList<String?>()
@@ -74,6 +86,16 @@ class DRMProps {
                         val array = emptyArray<String>()
                         drm.drmLicenseHeader = drmKeyRequestPropertiesList.toArray(array)
                     }
+                } else if (drm.drmType.equals("clearkey") && drmLocalClearKeys != null) {
+                    val drmLocalClearKeysList: ArrayList<String?> = ArrayList()
+                    for (i in 0 until drmLocalClearKeys.size()) {
+                        val clearKey = drmLocalClearKeys.getString(i)
+                        if (!clearKey.isNullOrEmpty()) {
+                            drmLocalClearKeysList.add(clearKey);
+                        }
+                    }
+                    val array = emptyArray<String>()
+                    drm.drmLocalClearKeysList = drmLocalClearKeysList.toArray(array)
                 } else {
                     return null
                 }

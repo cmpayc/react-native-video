@@ -5,7 +5,7 @@
     "paths": {
       "react-native-video": ["./src/index"]
     },
-    "composite": true,
+    "composite": false,
     "declaration": true,
     "sourceMap": true,
     "allowUnreachableCode": false,
@@ -28,7 +28,8 @@
     "strict": true,
     "target": "esnext",
     "verbatimModuleSyntax": false,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "incremental": false
   },
   "exclude": ["examples", "lib", "docs"]
 }

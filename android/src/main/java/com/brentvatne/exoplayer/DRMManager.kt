@@ -1,11 +1,13 @@
 package com.brentvatne.exoplayer
 
+import android.util.Base64
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.exoplayer.drm.DefaultDrmSessionManager
 import androidx.media3.exoplayer.drm.DrmSessionManager
 import androidx.media3.exoplayer.drm.FrameworkMediaDrm
 import androidx.media3.exoplayer.drm.HttpMediaDrmCallback
+import androidx.media3.exoplayer.drm.LocalMediaDrmCallback
 import androidx.media3.exoplayer.drm.UnsupportedDrmException
 import com.brentvatne.common.api.DRMProps
 import java.util.UUID
@@ -23,6 +25,39 @@ class DRMManager(private val dataSourceFactory: HttpDataSource.Factory) : DRMMan
         }
 
         try {
+            if (drmProps.drmType == "clearkey" && drmProps.drmLocalClearKeysList.isNotEmpty()) {
+                val drmLocalClearKeysList = arrayListOf<String>()
+
+                for (drmLocalClearKey in drmProps.drmLocalClearKeysList) {
+                    val localClearKeyInfo = drmLocalClearKey.split(":", limit = 2)
+                    val localClearKeyId = localClearKeyInfo[0]
+                    val decodedKeyHex = hexStringToByteArray(localClearKeyId)
+                    val encodedKeyBase64 = Base64.encodeToString(decodedKeyHex, Base64.NO_PADDING)
+
+                    val localClearKeyValue = localClearKeyInfo[1]
+                    val decodedValueHex = hexStringToByteArray(localClearKeyValue)
+                    val encodedValueBase64 = Base64.encodeToString(decodedValueHex, Base64.NO_PADDING)
+
+                    drmLocalClearKeysList.add(
+                        """{"kty":"oct","k":"${encodedValueBase64.trim()}","kid":"${encodedKeyBase64.trim()}"}"""
+                    )
+                }
+
+                val clearKeyString =
+                    """{"keys":[${drmLocalClearKeysList.joinToString(", ")}],"type":"temporary"}"""
+
+                val drmCallback = LocalMediaDrmCallback(clearKeyString.toByteArray())
+
+                val mediaDrm = FrameworkMediaDrm.newInstance(uuid)
+
+                return DefaultDrmSessionManager.Builder()
+                    .setPlayClearSamplesWithoutKeys(true)
+                    .setMultiSession(false)
+                    .setKeyRequestParameters(HashMap<String, String>())
+                    .setUuidAndExoMediaDrmProvider(uuid) { mediaDrm }
+                    .build(drmCallback)
+            }
+
             val drmCallback = HttpMediaDrmCallback(drmProps.drmLicenseServer, dataSourceFactory)
 
             // Set DRM headers
@@ -54,6 +89,14 @@ class DRMManager(private val dataSourceFactory: HttpDataSource.Factory) : DRMMan
                 return buildDrmSessionManager(uuid, drmProps, retryCount + 1)
             }
             throw UnsupportedDrmException(UnsupportedDrmException.REASON_UNSUPPORTED_SCHEME, ex)
+        }
+    }
+
+    private fun hexStringToByteArray(s: String): ByteArray {
+        return ByteArray(s.length / 2) { i ->
+            val index = i * 2
+            ((Character.digit(s[index], 16) shl 4) +
+                Character.digit(s[index + 1], 16)).toByte()
         }
     }
 }

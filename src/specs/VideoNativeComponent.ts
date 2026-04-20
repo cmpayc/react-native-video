@@ -73,6 +73,7 @@ type DebugConfig = Readonly<{
 type Drm = Readonly<{
   type?: DRMType;
   licenseServer?: string;
+  localClearKeys?: string[];
   headers?: Headers;
   contentId?: string; // ios
   certificateUrl?: string; // ios
